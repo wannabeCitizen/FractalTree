@@ -75,6 +75,9 @@
                         <br>Add random flowers?<br>
                         <input type="radio" name="flower" id="flowers" value="yes" checked="checked"> yes
                         <input type="radio" name="flower" id="flowers" value="no"> no
+                        <br>Add randomness to angles?<br>
+                        <input type="radio" name="angleRand" id="angleRand" value="yes"> yes
+                        <input type="radio" name="angleRand" id="angleRand" value="no" checked="checked"> no
                         <br>
                         <input type="submit" value="submit" id="sub_button">
                     </div>
@@ -95,7 +98,11 @@ $("#form1").submit(function ( event ){
     myWidth = parseInt($("#width").val());
     colorStart = $("#color1").val();
     colorEnd = $("#color2").val();
-    flowers = $("#flowers").val();
+    flowers = $("#flowers:checked").val();
+    angleRand = $("#angleRand:checked").val();
+
+    console.log(flowers);
+    console.log(angleRand);
     
     if (!myDepth) { myDepth = 8;}
     if (!ratio1) { ratio1 = .67;}
@@ -111,10 +118,14 @@ $("#form1").submit(function ( event ){
     } else if (flowers == "no") {
         flowers = false;
     }
-    console.log(flowers);
+    if (angleRand == "yes") {
+        angleRand = true;
+    } else if (angleRand == "no") {
+        angleRand = false;
+    }
 
     $("svg").empty();
-    lines = buildTree(myDepth, ratio1, ratio2, angle1, angle2, myWidth, myLength, flowers, colorStart, colorEnd);
+    lines = buildTree(myDepth, ratio1, ratio2, angle1, angle2, myWidth, myLength, flowers, colorStart, colorEnd, angleRand);
     return false;
 });
 
@@ -162,16 +173,28 @@ var svg = d3.select("body").append("svg")
                             .attr("height", height);
 var line = d3.svg.line()
 
-var buildTree = function (depth, ratio1, ratio2, angle1, angle2, widthT, lengthT, flowers, colorStart, colorEnd) {
+var buildTree = function (depth, ratio1, ratio2, angle1, angle2, widthT, lengthT, flowers, colorStart, colorEnd, angleRand) {
 
 
     var root = new treeLine(width/2, height-200, width/2, height-200-lengthT, lengthT, -90);
     var lines = [root];
     var leaves = [root];
 
+    console.log(angleRand);
+
     for (var i = 0; i<=depth; i++){
         var newLeaves = [];
         for (var seed in leaves) {
+            if (angleRand) {
+                angleTest = Math.random();
+                if (angleTest > .5) {
+                    angle1 += Math.random()*10;
+                    angle2 -= Math.random()*10;
+                } else { 
+                    angle1 -= Math.random()*10; 
+                    angle2 += Math.random()*10;
+                }
+            }
             var newLines = nextLines(leaves[seed], ratio1, ratio2, angle1, angle2);
             for (var addons in newLines) {
                 lines.push(newLines[addons]);
@@ -179,7 +202,6 @@ var buildTree = function (depth, ratio1, ratio2, angle1, angle2, widthT, lengthT
             }
         }
         leaves = newLeaves.slice();
-
     }
     
     var flowerScale = d3.scale.linear()
@@ -205,6 +227,8 @@ var buildTree = function (depth, ratio1, ratio2, angle1, angle2, widthT, lengthT
                         .domain([lengthT, 0])
                         .range([widthT, 2]);
     
+    
+
     svg.selectAll('.line')
         .data(lines)
         .enter().append("svg:line")
@@ -217,9 +241,7 @@ var buildTree = function (depth, ratio1, ratio2, angle1, angle2, widthT, lengthT
 
            // if (flowers && d.len < 10) { return flowerScale(d.len); } else { return colorScale(d.len); } );  
 
-
 };
-
 
 </script>
 
